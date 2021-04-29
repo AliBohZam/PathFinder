@@ -33,7 +33,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifdef DEBUG
 #define debugbegin(x) Serial.begin(x)
 #define debugln(x)    Serial.println(x)
-#define debug(x)    Serial.print(x)
+#define debug(x)      Serial.print(x)
 #else
 #define debugbegin(x)
 #define debugln(x)
@@ -81,55 +81,37 @@ void move(int ML, int MR) {
 }
 
 void loop() {
-  bool sensors[16];
-  sensors[0] = analogRead(A0) > THRESHOLD;
-  sensors[1] = analogRead(A1) > THRESHOLD;
-  sensors[2] = analogRead(A2) > THRESHOLD;
-  sensors[3] = analogRead(A3) > THRESHOLD;
-  sensors[4] = analogRead(A4) > THRESHOLD;
-  sensors[5] = analogRead(A5) > THRESHOLD;
-  sensors[6] = analogRead(A6) > THRESHOLD;
-  sensors[7] = analogRead(A7) > THRESHOLD;
-  sensors[8] = analogRead(A8) > THRESHOLD;
-  sensors[9] = analogRead(A9) > THRESHOLD;
-  sensors[10] = analogRead(A10) > THRESHOLD;
-  sensors[11] = analogRead(A11) > THRESHOLD;
-  sensors[12] = analogRead(A12) > THRESHOLD;
-  sensors[13] = analogRead(A13) > THRESHOLD;
-  sensors[14] = analogRead(A14) > THRESHOLD;
-  sensors[15] = analogRead(A15) > THRESHOLD;
+  debug(analogRead(A0) > THRESHOLD);
+  debug(analogRead(A1) > THRESHOLD);
+  debug(analogRead(A2) > THRESHOLD);
+  debug(analogRead(A3) > THRESHOLD);
+  debug(analogRead(A4) > THRESHOLD);
+  debug(analogRead(A5) > THRESHOLD);
+  debug(analogRead(A6) > THRESHOLD);
+  debug(analogRead(A7) > THRESHOLD);
+  debug(analogRead(A8) > THRESHOLD);
+  debug(analogRead(A9) > THRESHOLD);
+  debug(analogRead(A10) > THRESHOLD);
+  debug(analogRead(A11) > THRESHOLD);
+  debug(analogRead(A12) > THRESHOLD);
+  debug(analogRead(A13) > THRESHOLD);
+  debug(analogRead(A14) > THRESHOLD);
+  debugln(analogRead(A15) > THRESHOLD);
 
-  debug(sensors[0]);
-  debug(sensors[1]);
-  debug(sensors[2]);
-  debug(sensors[3]);
-  debug(sensors[4]);
-  debug(sensors[5]);
-  debug(sensors[6]);
-  debug(sensors[7]);
-  debug(sensors[8]);
-  debug(sensors[9]);
-  debug(sensors[10]);
-  debug(sensors[11]);
-  debug(sensors[12]);
-  debug(sensors[13]);
-  debug(sensors[14]);
-  debugln(sensors[15]);
-
-  if (sensors[7])       move(180, 255);
-  else if (sensors[8])  move(255, 180);
-  else if (sensors[6])  move(120, 255);
-  else if (sensors[9])  move(255, 120);
-  else if (sensors[5])  move(60, 255);
-  else if (sensors[10]) move(255, 60);
-  else if (sensors[4])  move(0, 255);
-  else if (sensors[11]) move(255, 0);
-  else if (sensors[3])  move(-60, 255);
-  else if (sensors[12]) move(255, -60);
-  else if (sensors[2])  move(-120, 255);
-  else if (sensors[13]) move(255, -120);
-  else if (sensors[1])  move(-180, 255);
-  else if (sensors[14]) move(255, -180);
-  else if (sensors[0])  move(-255, 255);
-  else if (sensors[15]) move(255, -255);
+  if (analogRead(A7) > THRESHOLD)       move(180, 255);
+  else if (analogRead(A8) > THRESHOLD)  move(255, 180);
+  else if (analogRead(A6) > THRESHOLD)  move(120, 255);
+  else if (analogRead(A9) > THRESHOLD)  move(255, 120);
+  else if (analogRead(A5) > THRESHOLD)  move(60, 255);
+  else if (analogRead(A10) > THRESHOLD) move(255, 60);
+  else if (analogRead(A4) > THRESHOLD)  move(0, 255);
+  else if (analogRead(A11) > THRESHOLD) move(255, 0);
+  else if (analogRead(A3) > THRESHOLD)  move(-60, 255);
+  else if (analogRead(A12) > THRESHOLD) move(255, -60);
+  else if (analogRead(A2) > THRESHOLD)  move(-120, 255);
+  else if (analogRead(A13) > THRESHOLD) move(255, -120);
+  else if (analogRead(A1) > THRESHOLD)  move(-180, 255);
+  else if (analogRead(A14) > THRESHOLD) move(255, -180);
+  else if (analogRead(A0) > THRESHOLD)  move(-255, 255);
+  else if (analogRead(A15) > THRESHOLD) move(255, -255);
 }
