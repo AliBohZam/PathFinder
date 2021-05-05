@@ -28,7 +28,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define IN4 53
 #define THRESHOLD 512
 
+#define MRF(pwm) {digitalWrite(IN1, LOW);  digitalWrite(IN2, HIGH); analogWrite(EN1, pwm);}
+#define MRB(pwm) {digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);  analogWrite(EN1, pwm);}
+#define MRS()    {digitalWrite(IN1, HIGH); digitalWrite(IN2, HIGH); analogWrite(EN1, 255);}
+#define MLF(pwm) {digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);  analogWrite(EN2, pwm);}
+#define MLB(pwm) {digitalWrite(IN3, LOW);  digitalWrite(IN4, HIGH); analogWrite(EN2, pwm);}
+#define MLS()    {digitalWrite(IN3, HIGH); digitalWrite(IN4, HIGH); analogWrite(EN2, 255);}
+
 #define DEBUG
+#undef DEBUG
 
 #ifdef DEBUG
 #define debugbegin(x) Serial.begin(x)
@@ -50,36 +58,6 @@ void setup() {
   pinMode(EN2, OUTPUT);
 }
 
-void move(int ML, int MR) {
-  if (MR > 0) {
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, HIGH);
-    analogWrite(EN1, MR);
-  } else if (MR == 0) {
-    digitalWrite(IN1, HIGH);
-    digitalWrite(IN2, HIGH);
-    analogWrite(EN1, 255);
-  } else {
-    digitalWrite(IN1, HIGH);
-    digitalWrite(IN2, LOW);
-    analogWrite(EN1, -MR);
-  }
-
-  if (ML > 0) {
-    digitalWrite(IN3, HIGH);
-    digitalWrite(IN4, LOW);
-    analogWrite(EN2, ML);
-  } else if (ML == 0) {
-    digitalWrite(IN3, HIGH);
-    digitalWrite(IN4, HIGH);
-    analogWrite(EN2, 255);
-  } else {
-    digitalWrite(IN3, LOW);
-    digitalWrite(IN4, HIGH);
-    analogWrite(EN2, -ML);
-  }
-}
-
 void loop() {
   debug(analogRead(A0) > THRESHOLD);
   debug(analogRead(A1) > THRESHOLD);
@@ -98,20 +76,53 @@ void loop() {
   debug(analogRead(A14) > THRESHOLD);
   debugln(analogRead(A15) > THRESHOLD);
 
-  if (analogRead(A7) > THRESHOLD)       move(180, 255);
-  else if (analogRead(A8) > THRESHOLD)  move(255, 180);
-  else if (analogRead(A6) > THRESHOLD)  move(120, 255);
-  else if (analogRead(A9) > THRESHOLD)  move(255, 120);
-  else if (analogRead(A5) > THRESHOLD)  move(60, 255);
-  else if (analogRead(A10) > THRESHOLD) move(255, 60);
-  else if (analogRead(A4) > THRESHOLD)  move(0, 255);
-  else if (analogRead(A11) > THRESHOLD) move(255, 0);
-  else if (analogRead(A3) > THRESHOLD)  move(-60, 255);
-  else if (analogRead(A12) > THRESHOLD) move(255, -60);
-  else if (analogRead(A2) > THRESHOLD)  move(-120, 255);
-  else if (analogRead(A13) > THRESHOLD) move(255, -120);
-  else if (analogRead(A1) > THRESHOLD)  move(-180, 255);
-  else if (analogRead(A14) > THRESHOLD) move(255, -180);
-  else if (analogRead(A0) > THRESHOLD)  move(-255, 255);
-  else if (analogRead(A15) > THRESHOLD) move(255, -255);
+  if (analogRead(A7) > THRESHOLD) {
+    MLF(180)
+    MRF(255)
+  } else if (analogRead(A8) > THRESHOLD) {
+    MLF(255)
+    MRF(180)
+  } else if (analogRead(A6) > THRESHOLD) {
+    MLF(120)
+    MRF(255)
+  } else if (analogRead(A9) > THRESHOLD) {
+    MLF(255)
+    MRF(120)
+  } else if (analogRead(A5) > THRESHOLD) {
+    MLF(60)
+    MRF(255)
+  } else if (analogRead(A10) > THRESHOLD) {
+    MLF(255)
+    MRF(60)
+  } else if (analogRead(A4) > THRESHOLD) {
+    MLS()
+    MRF(255)
+  } else if (analogRead(A11) > THRESHOLD) {
+    MLF(255)
+    MRS()
+  } else if (analogRead(A3) > THRESHOLD) {
+    MLB(60)
+    MRF(255)
+  } else if (analogRead(A12) > THRESHOLD) {
+    MLF(255)
+    MRB(60)
+  } else if (analogRead(A2) > THRESHOLD) {
+    MLB(120)
+    MRF(255)
+  } else if (analogRead(A13) > THRESHOLD) {
+    MLF(255)
+    MRB(120)
+  } else if (analogRead(A1) > THRESHOLD) {
+    MLB(180)
+    MRF(255)
+  } else if (analogRead(A14) > THRESHOLD) {
+    MLF(255)
+    MRB(180)
+  } else if (analogRead(A0) > THRESHOLD) {
+    MLB(255)
+    MRF(255)
+  } else if (analogRead(A15) > THRESHOLD) {
+    MLF(255)
+    MRB(255)
+  }
 }
