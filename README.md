@@ -3,7 +3,7 @@ Line Tracker Robot
 
 Features:
 
- - AVR 8-bit ATmega2560 micro-controller [Arduino Mega]
+ - 8-bit AVR ATmega2560 micro-controller [Arduino Mega]
  - 16 ordinary sensors including 3mm IR transmitters and receivers
  - L298 H-bridge DC motor driver with PWM speed control
  - Simple yet powerful heuristic control algorithm
