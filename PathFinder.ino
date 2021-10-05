@@ -20,36 +20,44 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***********************************************************************/
+#include <EEPROM.h>
+
 #define EN1 2
 #define EN2 3
 #define IN1 50
 #define IN2 51
 #define IN3 52
 #define IN4 53
+#define BUZZER 23
+#define BUTTON 22
 
-#define S0THRESHOLD (S0BLACK + S0WHITE)/2
-#define S1THRESHOLD (S1BLACK + S1WHITE)/2
-#define S2THRESHOLD (S2BLACK + S2WHITE)/2
-#define S3THRESHOLD (S3BLACK + S3WHITE)/2
-#define S4THRESHOLD (S4BLACK + S4WHITE)/2
-#define S5THRESHOLD (S5BLACK + S5WHITE)/2
-#define S6THRESHOLD (S6BLACK + S6WHITE)/2
-#define S7THRESHOLD (S7BLACK + S7WHITE)/2
-#define S8THRESHOLD (S8BLACK + S8WHITE)/2
-#define S9THRESHOLD (S9BLACK + S9WHITE)/2
-#define S10THRESHOLD (S10BLACK + S10WHITE)/2
-#define S11THRESHOLD (S11BLACK + S11WHITE)/2
-#define S12THRESHOLD (S12BLACK + S12WHITE)/2
-#define S13THRESHOLD (S13BLACK + S13WHITE)/2
-#define S14THRESHOLD (S14BLACK + S14WHITE)/2
-#define S15THRESHOLD (S15BLACK + S15WHITE)/2
+#define ADC_MAX (1 << 10) - 1
+#define ADC_MIN 0
 
-#define MRF(pwm) {digitalWrite(IN1, LOW);  digitalWrite(IN2, HIGH); analogWrite(EN1, pwm);}
-#define MRB(pwm) {digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);  analogWrite(EN1, pwm);}
-#define MRS()    {digitalWrite(IN1, HIGH); digitalWrite(IN2, HIGH); analogWrite(EN1, 255);}
-#define MLF(pwm) {digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);  analogWrite(EN2, pwm);}
-#define MLB(pwm) {digitalWrite(IN3, LOW);  digitalWrite(IN4, HIGH); analogWrite(EN2, pwm);}
-#define MLS()    {digitalWrite(IN3, HIGH); digitalWrite(IN4, HIGH); analogWrite(EN2, 255);}
+#define MRF(pwm) \
+  digitalWrite(IN1, LOW); \
+  digitalWrite(IN2, HIGH); \
+  analogWrite(EN1, pwm);
+#define MRB(pwm) \
+  digitalWrite(IN1, HIGH); \
+  digitalWrite(IN2, LOW); \
+  analogWrite(EN1, pwm);
+#define MRS() \
+  digitalWrite(IN1, HIGH); \
+  digitalWrite(IN2, HIGH); \
+  analogWrite(EN1, 255);
+#define MLF(pwm) \
+  digitalWrite(IN3, HIGH); \
+  digitalWrite(IN4, LOW); \
+  analogWrite(EN2, pwm);
+#define MLB(pwm) \
+  digitalWrite(IN3, LOW); \
+  digitalWrite(IN4, HIGH); \
+  analogWrite(EN2, pwm);
+#define MLS() \
+  digitalWrite(IN3, HIGH); \
+  digitalWrite(IN4, HIGH); \
+  analogWrite(EN2, 255);
 
 #define DEBUG
 #undef DEBUG
@@ -64,39 +72,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define debug(x)
 #endif
 
-// Calibrate these
-#define S0BLACK 724
-#define S0WHITE 300
-#define S1BLACK 724
-#define S1WHITE 300
-#define S2BLACK 724
-#define S2WHITE 300
-#define S3BLACK 724
-#define S3WHITE 300
-#define S4BLACK 724
-#define S4WHITE 300
-#define S5BLACK 724
-#define S5WHITE 300
-#define S6BLACK 724
-#define S6WHITE 300
-#define S7BLACK 724
-#define S7WHITE 300
-#define S8BLACK 724
-#define S8WHITE 300
-#define S9BLACK 724
-#define S9WHITE 300
-#define S10BLACK 724
-#define S10WHITE 300
-#define S11BLACK 724
-#define S11WHITE 300
-#define S12BLACK 724
-#define S12WHITE 300
-#define S13BLACK 724
-#define S13WHITE 300
-#define S14BLACK 724
-#define S14WHITE 300
-#define S15BLACK 724
-#define S15WHITE 300
+int thresholds[16] = { ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2,
+                       ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2,
+                       ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2,
+                       ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2 };
 
 void setup() {
   debugbegin(9600);
@@ -106,72 +85,131 @@ void setup() {
   pinMode(IN4, OUTPUT);
   pinMode(EN1, OUTPUT);
   pinMode(EN2, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+  if (digitalRead(BUTTON) == HIGH) {
+    buzz();
+    calibrate();
+  } else {
+    for (int i = 0; i < 16; i++) {
+      thresholds[i] = ((EEPROM.read(2 * i + 1)) << 8) + EEPROM.read(2 * i);
+    }
+  }
+}
+
+void buzz() {
+  digitalWrite(BUZZER, HIGH);
+  delay(25);
+  digitalWrite(BUZZER, LOW);
+}
+
+void calibrate() {
+  unsigned int minimums[16] = { ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX,
+                                ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX };
+  unsigned int maximums[16] = { ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN,
+                                ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN };
+  unsigned int counter = 0;
+  boolean flag = true;
+  while (true) {
+    int sensors[16] = { analogRead(A0 ), analogRead(A1 ), analogRead(A2 ), analogRead(A3 ),
+                        analogRead(A4 ), analogRead(A5 ), analogRead(A6 ), analogRead(A7 ),
+                        analogRead(A8 ), analogRead(A9 ), analogRead(A10), analogRead(A11),
+                        analogRead(A12), analogRead(A13), analogRead(A14), analogRead(A15) };
+    for (int i = 0; i < 16; i++) {
+      if (sensors[i] > maximums[i]) {
+        maximums[i] = sensors[i];
+      }
+      if (sensors[i] < minimums[i]) {
+        minimums[i] = sensors[i];
+      }
+    }
+    if (counter == 255) {
+      counter = 0;
+      buzz();
+      if (flag == true) {
+        flag = false;
+        MLF(150)
+        MRB(150)
+      } else {
+        flag = true;
+        MLB(150)
+        MRF(150)
+      }
+      for (int i = 0; i < 16; i++) {
+        int threshold = (minimums[i] + maximums[i]) / 2;
+        EEPROM.update(2 * i, threshold & 0xff);
+        EEPROM.update(2 * i + 1, (threshold & 0xff00) >> 8);
+      }
+    } else {
+      counter++;
+    }
+  }
 }
 
 void loop() {
-  debug(analogRead(A0) + " ");
-  debug(analogRead(A1) + " ");
-  debug(analogRead(A2) + " ");
-  debug(analogRead(A3) + " ");
-  debug(analogRead(A4) + " ");
-  debug(analogRead(A5) + " ");
-  debug(analogRead(A6) + " ");
-  debug(analogRead(A7) + " ");
-  debug(analogRead(A8) + " ");
-  debug(analogRead(A9) + " ");
-  debug(analogRead(A10) + " ");
-  debug(analogRead(A11) + " ");
-  debug(analogRead(A12) + " ");
-  debug(analogRead(A13) + " ");
-  debug(analogRead(A14) + " ");
-  debugln(analogRead(A15));
+  debugln("S0 : " + String(analogRead(A0 )) + " " + String(thresholds[0 ]));
+  debugln("S1 : " + String(analogRead(A1 )) + " " + String(thresholds[1 ]));
+  debugln("S2 : " + String(analogRead(A2 )) + " " + String(thresholds[2 ]));
+  debugln("S3 : " + String(analogRead(A3 )) + " " + String(thresholds[3 ]));
+  debugln("S4 : " + String(analogRead(A4 )) + " " + String(thresholds[4 ]));
+  debugln("S5 : " + String(analogRead(A5 )) + " " + String(thresholds[5 ]));
+  debugln("S6 : " + String(analogRead(A6 )) + " " + String(thresholds[6 ]));
+  debugln("S7 : " + String(analogRead(A7 )) + " " + String(thresholds[7 ]));
+  debugln("S8 : " + String(analogRead(A8 )) + " " + String(thresholds[8 ]));
+  debugln("S9 : " + String(analogRead(A9 )) + " " + String(thresholds[9 ]));
+  debugln("S10: " + String(analogRead(A10)) + " " + String(thresholds[10]));
+  debugln("S11: " + String(analogRead(A11)) + " " + String(thresholds[11]));
+  debugln("S12: " + String(analogRead(A12)) + " " + String(thresholds[12]));
+  debugln("S13: " + String(analogRead(A13)) + " " + String(thresholds[13]));
+  debugln("S14: " + String(analogRead(A14)) + " " + String(thresholds[14]));
+  debugln("S15: " + String(analogRead(A15)) + " " + String(thresholds[15]));
+  debugln("");
 
-  if (analogRead(A7) > S7THRESHOLD) {
+  if (analogRead(A7) > thresholds[7]) {
     MLF(180)
     MRF(255)
-  } else if (analogRead(A8) > S8THRESHOLD) {
+  } else if (analogRead(A8) > thresholds[8]) {
     MLF(255)
     MRF(180)
-  } else if (analogRead(A6) > S6THRESHOLD) {
+  } else if (analogRead(A6) > thresholds[6]) {
     MLF(120)
     MRF(255)
-  } else if (analogRead(A9) > S9THRESHOLD) {
+  } else if (analogRead(A9) > thresholds[9]) {
     MLF(255)
     MRF(120)
-  } else if (analogRead(A5) > S5THRESHOLD) {
+  } else if (analogRead(A5) > thresholds[5]) {
     MLF(60)
     MRF(255)
-  } else if (analogRead(A10) > S10THRESHOLD) {
+  } else if (analogRead(A10) > thresholds[10]) {
     MLF(255)
     MRF(60)
-  } else if (analogRead(A4) > S4THRESHOLD) {
+  } else if (analogRead(A4) > thresholds[4]) {
     MLS()
     MRF(255)
-  } else if (analogRead(A11) > S11THRESHOLD) {
+  } else if (analogRead(A11) > thresholds[11]) {
     MLF(255)
     MRS()
-  } else if (analogRead(A3) > S3THRESHOLD) {
+  } else if (analogRead(A3) > thresholds[3]) {
     MLB(60)
     MRF(255)
-  } else if (analogRead(A12) > S12THRESHOLD) {
+  } else if (analogRead(A12) > thresholds[12]) {
     MLF(255)
     MRB(60)
-  } else if (analogRead(A2) > S2THRESHOLD) {
+  } else if (analogRead(A2) > thresholds[2]) {
     MLB(120)
     MRF(255)
-  } else if (analogRead(A13) > S13THRESHOLD) {
+  } else if (analogRead(A13) > thresholds[13]) {
     MLF(255)
     MRB(120)
-  } else if (analogRead(A1) > S1THRESHOLD) {
+  } else if (analogRead(A1) > thresholds[1]) {
     MLB(180)
     MRF(255)
-  } else if (analogRead(A14) > S14THRESHOLD) {
+  } else if (analogRead(A14) > thresholds[14]) {
     MLF(255)
     MRB(180)
-  } else if (analogRead(A0) > S0THRESHOLD) {
+  } else if (analogRead(A0) > thresholds[0]) {
     MLB(255)
     MRF(255)
-  } else if (analogRead(A15) > S15THRESHOLD) {
+  } else if (analogRead(A15) > thresholds[15]) {
     MLF(255)
     MRB(255)
   }
