@@ -69,11 +69,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   digitalWrite(IN4, HIGH); \
   analogWrite(EN2, 255);
 
-#define ADC_MAX (1 << 10) - 1
-#define ADC_MIN 0
-#define THLD    (ADC_MAX + ADC_MIN) / 2
+#define MAX (1 << 10) - 1
+#define MIN 0
+#define MID (MAX + MIN) / 2
 
-int thresholds[16] = { THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD };
+int thresholds[16] = { MID, MID, MID, MID, MID, MID, MID, MID, MID, MID, MID, MID, MID, MID, MID, MID };
 
 void setup() {
   debugbegin(9600);
@@ -101,8 +101,8 @@ void buzz() {
 }
 
 void calibrate() {
-  int minimums[16] = { THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD };
-  int maximums[16] = { THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD };
+  int minimums[16] = { MAX, MAX, MAX, MAX, MAX, MAX, MAX, MAX, MAX, MAX, MAX, MAX, MAX, MAX, MAX, MAX };
+  int maximums[16] = { MIN, MIN, MIN, MIN, MIN, MIN, MIN, MIN, MIN, MIN, MIN, MIN, MIN, MIN, MIN, MIN };
   unsigned int counter = 0;
   boolean flag = true;
   while (true) {
