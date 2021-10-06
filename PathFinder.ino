@@ -22,17 +22,27 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***********************************************************************/
 #include <EEPROM.h>
 
+#define DEBUG
+#undef DEBUG
+
+#ifdef DEBUG
+#define debugbegin(x) Serial.begin(x)
+#define debugln(x)    Serial.println(x)
+#define debug(x)      Serial.print(x)
+#else
+#define debugbegin(x)
+#define debugln(x)
+#define debug(x)
+#endif
+
+#define BUTTON 22
+#define BUZZER 23
 #define EN1 2
 #define EN2 3
 #define IN1 50
 #define IN2 51
 #define IN3 52
 #define IN4 53
-#define BUZZER 23
-#define BUTTON 22
-
-#define ADC_MAX (1 << 10) - 1
-#define ADC_MIN 0
 
 #define MRF(pwm) \
   digitalWrite(IN1, LOW); \
@@ -59,23 +69,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   digitalWrite(IN4, HIGH); \
   analogWrite(EN2, 255);
 
-#define DEBUG
-#undef DEBUG
+#define ADC_MAX (1 << 10) - 1
+#define ADC_MIN 0
+#define THLD    (ADC_MAX + ADC_MIN) / 2
 
-#ifdef DEBUG
-#define debugbegin(x) Serial.begin(x)
-#define debugln(x)    Serial.println(x)
-#define debug(x)      Serial.print(x)
-#else
-#define debugbegin(x)
-#define debugln(x)
-#define debug(x)
-#endif
-
-int thresholds[16] = { ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2,
-                       ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2,
-                       ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2,
-                       ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2, ADC_MAX + ADC_MIN / 2 };
+int thresholds[16] = { THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD };
 
 void setup() {
   debugbegin(9600);
@@ -103,10 +101,8 @@ void buzz() {
 }
 
 void calibrate() {
-  unsigned int minimums[16] = { ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX,
-                                ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX, ADC_MAX };
-  unsigned int maximums[16] = { ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN,
-                                ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN, ADC_MIN };
+  int minimums[16] = { THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD };
+  int maximums[16] = { THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD, THLD };
   unsigned int counter = 0;
   boolean flag = true;
   while (true) {
@@ -164,49 +160,49 @@ void loop() {
   debugln("S15: " + String(analogRead(A15)) + " " + String(thresholds[15]));
   debugln("");
 
-  if (analogRead(A7) > thresholds[7]) {
+  if (analogRead(A7 ) > thresholds[7 ]) {
     MLF(180)
     MRF(255)
-  } else if (analogRead(A8) > thresholds[8]) {
+  } else if (analogRead(A8 ) > thresholds[8 ]) {
     MLF(255)
     MRF(180)
-  } else if (analogRead(A6) > thresholds[6]) {
+  } else if (analogRead(A6 ) > thresholds[6 ]) {
     MLF(120)
     MRF(255)
-  } else if (analogRead(A9) > thresholds[9]) {
+  } else if (analogRead(A9 ) > thresholds[9 ]) {
     MLF(255)
     MRF(120)
-  } else if (analogRead(A5) > thresholds[5]) {
+  } else if (analogRead(A5 ) > thresholds[5 ]) {
     MLF(60)
     MRF(255)
   } else if (analogRead(A10) > thresholds[10]) {
     MLF(255)
     MRF(60)
-  } else if (analogRead(A4) > thresholds[4]) {
+  } else if (analogRead(A4 ) > thresholds[4 ]) {
     MLS()
     MRF(255)
   } else if (analogRead(A11) > thresholds[11]) {
     MLF(255)
     MRS()
-  } else if (analogRead(A3) > thresholds[3]) {
+  } else if (analogRead(A3 ) > thresholds[3 ]) {
     MLB(60)
     MRF(255)
   } else if (analogRead(A12) > thresholds[12]) {
     MLF(255)
     MRB(60)
-  } else if (analogRead(A2) > thresholds[2]) {
+  } else if (analogRead(A2 ) > thresholds[2 ]) {
     MLB(120)
     MRF(255)
   } else if (analogRead(A13) > thresholds[13]) {
     MLF(255)
     MRB(120)
-  } else if (analogRead(A1) > thresholds[1]) {
+  } else if (analogRead(A1 ) > thresholds[1 ]) {
     MLB(180)
     MRF(255)
   } else if (analogRead(A14) > thresholds[14]) {
     MLF(255)
     MRB(180)
-  } else if (analogRead(A0) > thresholds[0]) {
+  } else if (analogRead(A0 ) > thresholds[0 ]) {
     MLB(255)
     MRF(255)
   } else if (analogRead(A15) > thresholds[15]) {
