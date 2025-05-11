@@ -3,6 +3,7 @@ Line Tracker Robot
 
 Features:
 
+ - 16-Sensor and 15-Sensor versions 
  - 8-bit AVR ATmega2560 micro-controller [Arduino Mega]
  - 16 ordinary sensors including 3mm IR transmitters and receivers
  - Smart sensors auto calibration
